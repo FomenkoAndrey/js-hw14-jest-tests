@@ -1,26 +1,27 @@
 import { getData } from '../main'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 let originalConsoleError // Визначаємо змінну в області видимості, доступній для обох хуків
 let originalConsoleLog // Визначаємо змінну в області видимості, доступній для обох хуків
 
-// Мокуємо `fetch` глобально за допомогою jest
+// Мокуємо `fetch` глобально за допомогою vitest
 beforeEach(() => {
-  jest.resetAllMocks()
   originalConsoleError = console.error // Зберігаємо оригінальний console.error
   originalConsoleLog = console.log // Зберігаємо оригінальний console.log
-  console.error = jest.fn() // Приглушаємо console.error
-  console.log = jest.fn() // Приглушаємо console.log
-  global.fetch = jest.fn()
+  console.error = vi.fn() // Приглушаємо console.error
+  console.log = vi.fn() // Приглушаємо console.log
+  global.fetch = vi.fn()
 })
 
 afterEach(() => {
   console.error = originalConsoleError // Відновлюємо console.error
   console.log = originalConsoleLog // Відновлюємо console.log
+  vi.clearAllMocks()
 })
 
 describe('getData function', () => {
   it('uses GET method for fetching data', async () => {
-    fetch.mockImplementationOnce(() => Promise.resolve({
+    global.fetch.mockImplementationOnce(() => Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ id: 1, title: 'Test Post' })
     }))
@@ -32,7 +33,7 @@ describe('getData function', () => {
   })
 
   it('returns data on successful fetch', async () => {
-    fetch.mockImplementationOnce(() => Promise.resolve({
+    global.fetch.mockImplementationOnce(() => Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ id: 1, title: 'Test Post' })
     }))
@@ -42,7 +43,7 @@ describe('getData function', () => {
   })
 
   it('returns status code on fetch error', async () => {
-    fetch.mockImplementationOnce(() => Promise.resolve({
+    global.fetch.mockImplementationOnce(() => Promise.resolve({
       ok: false,
       status: 404
     }))
@@ -52,7 +53,7 @@ describe('getData function', () => {
   })
 
   it('returns error message when fetch operation fails', async () => {
-    fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')))
+    global.fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')))
 
     const errorMessage = await getData('/error')
     expect(errorMessage).toContain('Network error')

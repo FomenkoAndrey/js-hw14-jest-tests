@@ -1,16 +1,16 @@
 import { putData } from '../main'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 let originalConsoleError // Визначаємо змінну в області видимості, доступній для обох хуків
 let originalConsoleLog // Визначаємо змінну в області видимості, доступній для обох хуків
 
-// Мокуємо `fetch` глобально за допомогою jest
+// Мокуємо `fetch` глобально за допомогою vitest
 beforeEach(() => {
-  jest.resetAllMocks()
   originalConsoleError = console.error // Зберігаємо оригінальний console.error
   originalConsoleLog = console.log // Зберігаємо оригінальний console.log
-  console.error = jest.fn() // Приглушаємо console.error
-  console.log = jest.fn() // Приглушаємо console.log
-  global.fetch = jest.fn(() =>
+  console.error = vi.fn() // Приглушаємо console.error
+  console.log = vi.fn() // Приглушаємо console.log
+  global.fetch = vi.fn(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ message: 'Success' })
@@ -21,7 +21,9 @@ beforeEach(() => {
 afterEach(() => {
   console.error = originalConsoleError // Відновлюємо console.error
   console.log = originalConsoleLog // Відновлюємо console.log
+  vi.clearAllMocks()
 })
+
 describe('putData function', () => {
   it('successfully updates data and returns the result', async () => {
     const id = 1
@@ -42,7 +44,7 @@ describe('putData function', () => {
   })
 
   it('returns error message on fetch failure', async () => {
-    fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')))
+    global.fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')))
 
     const result = await putData(1, {})
     expect(result).toContain('Network error')
