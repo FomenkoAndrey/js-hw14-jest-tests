@@ -1,27 +1,28 @@
 import { postData } from '../main'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-let originalConsoleError // Визначаємо змінну в області видимості, доступній для обох хуків
-let originalConsoleLog // Визначаємо змінну в області видимості, доступній для обох хуків
+let originalConsoleError
+let originalConsoleLog
 
-// Мокуємо `fetch` глобально за допомогою jest
+// Мокуємо `fetch` глобально за допомогою vitest
 beforeEach(() => {
-  jest.resetAllMocks()
-  originalConsoleError = console.error // Зберігаємо оригінальний console.error
-  originalConsoleLog = console.log // Зберігаємо оригінальний console.log
-  console.error = jest.fn() // Приглушаємо console.error
-  console.log = jest.fn() // Приглушаємо console.log
-  global.fetch = jest.fn()
+  originalConsoleError = console.error
+  originalConsoleLog = console.log
+  console.error = vi.fn()
+  console.log = vi.fn()
+  global.fetch = vi.fn()
 })
 
 afterEach(() => {
-  console.error = originalConsoleError // Відновлюємо console.error
-  console.log = originalConsoleLog // Відновлюємо console.log
+  console.error = originalConsoleError
+  console.log = originalConsoleLog
+  vi.clearAllMocks()
 })
 
 describe('postData function', () => {
   it('uses POST method to send data', async () => {
     const mockData = { title: 'Test', body: 'This is a test', userId: 1 }
-    fetch.mockImplementationOnce(() => Promise.resolve({
+    global.fetch.mockImplementationOnce(() => Promise.resolve({
       ok: true,
       json: () => Promise.resolve(mockData)
     }))
@@ -32,7 +33,7 @@ describe('postData function', () => {
     expect(fetch).toHaveBeenCalledWith(
       'https://jsonplaceholder.typicode.com/posts',
       {
-        method: 'POST', // Тепер ми явно перевіряємо метод
+        method: 'POST',
         body: JSON.stringify(mockData),
         headers: {
           'Content-Type': 'application/json'
@@ -43,7 +44,7 @@ describe('postData function', () => {
 
   it('successfully posts data to an API', async () => {
     const mockData = { title: 'Test', body: 'This is a test', userId: 1 }
-    fetch.mockImplementationOnce(() => Promise.resolve({
+    global.fetch.mockImplementationOnce(() => Promise.resolve({
       ok: true,
       json: () => Promise.resolve(mockData)
     }))
@@ -54,7 +55,7 @@ describe('postData function', () => {
   })
 
   it('returns an error message on a failed request', async () => {
-    fetch.mockImplementationOnce(() => Promise.resolve({ ok: false, status: 404 }))
+    global.fetch.mockImplementationOnce(() => Promise.resolve({ ok: false, status: 404 }))
 
     const result = await postData('/posts', {})
     expect(result).toContain('HTTP error! status: 404')

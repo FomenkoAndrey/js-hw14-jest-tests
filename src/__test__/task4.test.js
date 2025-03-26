@@ -1,21 +1,27 @@
 import { patchData } from '../main'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-let originalConsoleError // Визначаємо змінну в області видимості, доступній для обох хуків
-let originalConsoleLog // Визначаємо змінну в області видимості, доступній для обох хуків
+let originalConsoleError
+let originalConsoleLog
 
-// Мокуємо `fetch` глобально за допомогою jest
+// Мокуємо `fetch` глобально за допомогою vitest
 beforeEach(() => {
-  jest.resetAllMocks()
-  originalConsoleError = console.error // Зберігаємо оригінальний console.error
-  originalConsoleLog = console.log // Зберігаємо оригінальний console.log
-  console.error = jest.fn() // Приглушаємо console.error
-  console.log = jest.fn() // Приглушаємо console.log
-  global.fetch = jest.fn(() =>
+  originalConsoleError = console.error
+  originalConsoleLog = console.log
+  console.error = vi.fn()
+  console.log = vi.fn()
+  global.fetch = vi.fn(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ message: 'Success' })
     })
   )
+})
+
+afterEach(() => {
+  console.error = originalConsoleError
+  console.log = originalConsoleLog
+  vi.clearAllMocks()
 })
 
 describe('patchData function', () => {
@@ -38,7 +44,7 @@ describe('patchData function', () => {
   })
 
   it('returns an error message on fetch failure', async () => {
-    fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')))
+    global.fetch.mockImplementationOnce(() => Promise.reject(new Error('Network error')))
 
     const result = await patchData(1, {})
     expect(result).toContain('Network error')

@@ -1,27 +1,28 @@
 import { deleteData } from '../main'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 let originalConsoleError // Визначаємо змінну в області видимості, доступній для обох хуків
 let originalConsoleLog // Визначаємо змінну в області видимості, доступній для обох хуків
 
-// Мокуємо `fetch` глобально за допомогою jest
+// Мокуємо `fetch` глобально за допомогою vitest
 beforeEach(() => {
-  jest.resetAllMocks()
   originalConsoleError = console.error // Зберігаємо оригінальний console.error
   originalConsoleLog = console.log // Зберігаємо оригінальний console.log
-  console.error = jest.fn() // Приглушаємо console.error
-  console.log = jest.fn() // Приглушаємо console.log
-  global.fetch = jest.fn()
+  console.error = vi.fn() // Приглушаємо console.error
+  console.log = vi.fn() // Приглушаємо console.log
+  global.fetch = vi.fn()
 })
 
 afterEach(() => {
   console.error = originalConsoleError // Відновлюємо console.error
   console.log = originalConsoleLog // Відновлюємо console.log
+  vi.clearAllMocks()
 })
 
 describe('deleteData function error handling', () => {
   it('returns true on successful deletion', async () => {
     // Симулюємо успішну відповідь
-    fetch.mockResolvedValue({ ok: true, status: 200 })
+    global.fetch.mockResolvedValue({ ok: true, status: 200 })
 
     const id = 1 // Використовуємо ідентифікатор для сценарію успішного видалення
     const result = await deleteData(id)
@@ -35,7 +36,7 @@ describe('deleteData function error handling', () => {
 
   it('returns error message when the fetch call fails', async () => {
     // Симулюємо помилку fetch запиту
-    fetch.mockRejectedValue(new Error('Network failure'))
+    global.fetch.mockRejectedValue(new Error('Network failure'))
 
     const id = 3 // Використовуємо ідентифікатор, який симулює сценарій помилки
     const result = await deleteData(id)
@@ -49,7 +50,7 @@ describe('deleteData function error handling', () => {
 
   it('returns status code on non-200 response', async () => {
     // Симулюємо відповідь, що імітує неуспішне видалення
-    fetch.mockResolvedValue({ ok: false, status: 500 })
+    global.fetch.mockResolvedValue({ ok: false, status: 500 })
 
     const id = 4 // Ідентифікатор для сценарію неуспішного видалення
     const result = await deleteData(id)
